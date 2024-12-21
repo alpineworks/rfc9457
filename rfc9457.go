@@ -18,7 +18,7 @@ type RFC9457 struct {
 	// The "status" member, if present, is only advisory; it conveys the HTTP status code used for the convenience of the consumer.
 	//
 	// https://datatracker.ietf.org/doc/html/rfc9457#name-status
-	Status string `json:"status,omitempty" mapstructure:"status,omitempty"`
+	Status int `json:"status,omitempty" mapstructure:"status,omitempty"`
 
 	// The "title" member is a JSON string containing a short, human-readable summary of the problem type.
 	// It SHOULD NOT change from occurrence to occurrence of the problem, except for localization.
@@ -41,8 +41,19 @@ type RFC9457 struct {
 	// Problem type definitions MAY extend the problem details object with additional members that are specific to that problem type.
 	//
 	// https://datatracker.ietf.org/doc/html/rfc9457#name-extension-members
-	extensions map[string]any `json:"-"`
+	Extensions map[string]any `json:"-" mapstructure:"extensions,remain"`
 }
+
+var (
+	// keys to ignore when translating from json to rfc9457 struct (map translations)
+	keysToIgnore = []string{
+		"type",
+		"status",
+		"title",
+		"detail",
+		"instance",
+	}
+)
 
 type RFC9457Option func(*RFC9457)
 
@@ -65,9 +76,9 @@ func WithType(t string) RFC9457Option {
 	}
 }
 
-func WithStatus(s string) RFC9457Option {
+func WithStatus(i int) RFC9457Option {
 	return func(r *RFC9457) {
-		r.Status = s
+		r.Status = i
 	}
 }
 
@@ -108,7 +119,7 @@ func WithExtensions(e ...Extension) RFC9457Option {
 	}
 
 	return func(r *RFC9457) {
-		r.extensions = extensions
+		r.Extensions = extensions
 	}
 }
 
@@ -120,14 +131,12 @@ func (r *RFC9457) ToJSON() (string, error) {
 		return "", ErrUnableToTranslateToIntermediateMap
 	}
 
-	// set extensions
-	//
-	// will not override existing keys (as they are part of the rfc spec)
-	for k, v := range r.extensions {
-		if _, exists := intermediateMap[k]; !exists {
+	for k, v := range r.Extensions {
+		if _, ok := intermediateMap[k]; !ok {
 			intermediateMap[k] = v
 		}
 	}
+	delete(intermediateMap, "extensions")
 
 	jsonResult, err := json.Marshal(intermediateMap)
 	if err != nil {
@@ -135,4 +144,32 @@ func (r *RFC9457) ToJSON() (string, error) {
 	}
 
 	return string(jsonResult), nil
+}
+
+func FromJSON(jsonString string) (*RFC9457, error) {
+	intermediateMap := make(map[string]any)
+
+	err := json.Unmarshal([]byte(jsonString), &intermediateMap)
+	if err != nil {
+		return nil, ErrUnableToUnmarshalJSON
+	}
+
+	r := &RFC9457{}
+
+	err = mapstructure.Decode(intermediateMap, r)
+	if err != nil {
+		return nil, ErrUnableToTranslateToRFC9457
+	}
+
+	for _, key := range keysToIgnore {
+		delete(intermediateMap, key)
+	}
+
+	if len(intermediateMap) == 0 {
+		r.Extensions = nil
+	} else {
+		r.Extensions = intermediateMap
+	}
+
+	return r, nil
 }
