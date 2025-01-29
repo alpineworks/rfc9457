@@ -2,8 +2,13 @@ package rfc9457
 
 import (
 	"encoding/json"
+	"net/http"
 
 	"github.com/mitchellh/mapstructure"
+)
+
+const (
+	ProblemContentType string = "application/problem+json"
 )
 
 type RFC9457 struct {
@@ -172,4 +177,18 @@ func FromJSON(jsonString string) (*RFC9457, error) {
 	}
 
 	return r, nil
+}
+
+func (r *RFC9457) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	jsonResult, err := r.ToJSON()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", ProblemContentType)
+
+	w.WriteHeader(r.Status)
+
+	_, _ = w.Write([]byte(jsonResult))
 }
