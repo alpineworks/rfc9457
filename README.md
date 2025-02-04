@@ -16,7 +16,7 @@
 ---
 
 ## Usage
-See [examples/main.go](examples/main.go) for information in using the library.
+See [examples/](examples/) for extra implementation information for this library.
 
 <details open>
 <summary>Suggested Implementation</summary>
