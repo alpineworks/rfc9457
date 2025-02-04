@@ -7,7 +7,7 @@
 
 <div align="center">
 
-[RFC 9457][rfc-link]    q
+[RFC 9457][rfc-link]
 
 [![Alpineworks][alpineworks-badge]][for-the-badge-link] [![Made With Go][made-with-go-badge]][for-the-badge-link]
 
