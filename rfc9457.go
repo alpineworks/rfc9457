@@ -192,3 +192,7 @@ func (r *RFC9457) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	_, _ = w.Write([]byte(jsonResult))
 }
+
+func (r *RFC9457) Write() http.HandlerFunc {
+	return r.ServeHTTP
+}
