@@ -1,25 +1,9 @@
 package rfc9457
 
-type RFC9457Error int
+import "errors"
 
-const (
-	ErrUnableToMarshalJSON RFC9457Error = iota
-	ErrUnableToUnmarshalJSON
-	ErrUnableToTranslateToIntermediateMap
-	ErrUnableToTranslateToRFC9457
+var (
+	ErrUnableToMarshalJSON   = errors.New("rfc9457: unable to marshal json")
+	ErrUnableToUnmarshalJSON = errors.New("rfc9457: unable to unmarshal json")
+	ErrExtensionKeyCollision = errors.New("rfc9457: extension key collides with reserved field")
 )
-
-func (e RFC9457Error) Error() string {
-	switch e {
-	case ErrUnableToMarshalJSON:
-		return "unable to marshal json"
-	case ErrUnableToUnmarshalJSON:
-		return "unable to unmarshal json"
-	case ErrUnableToTranslateToIntermediateMap:
-		return "unable to translate to intermediate map"
-	case ErrUnableToTranslateToRFC9457:
-		return "unable to translate to rfc9457"
-	default:
-		return "unknown error"
-	}
-}
